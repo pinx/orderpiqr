@@ -1,4 +1,4 @@
-package com.example.orderpiqr
+package nl.pinxoft.orderpiqr
 
 import org.junit.Test
 
