@@ -22,6 +22,7 @@ import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import androidx.camera.core.CameraSelector
 import androidx.preference.Preference
+import androidx.preference.PreferenceManager
 import com.google.common.base.Preconditions
 import com.google.mlkit.vision.objects.ObjectDetectorOptionsBase.DetectorMode
 import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions
@@ -32,7 +33,7 @@ import nl.pinxoft.orderpiqr.CameraSource.SizePair
  */
 object PreferenceUtils {
     fun saveString(context: Context, @StringRes prefKeyId: Int, value: String?) {
-        Preference(context).sharedPreferences
+        PreferenceManager.getDefaultSharedPreferences(context)
             .edit()
             .putString(context.getString(prefKeyId), value)
             .apply()
@@ -53,13 +54,13 @@ object PreferenceUtils {
             pictureSizePrefKey = context.getString(R.string.pref_key_front_camera_picture_size)
         }
         return try {
-            val sharedPreferences = Preference(context).sharedPreferences
+            val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
             SizePair(
                 com.google.android.gms.common.images.Size.parseSize(
-                    sharedPreferences.getString(previewSizePrefKey, "0")!!
+                    sharedPreferences.getString(previewSizePrefKey, "352x288")!!
                 ),
                 com.google.android.gms.common.images.Size.parseSize(
-                    sharedPreferences.getString(pictureSizePrefKey, "0")!!
+                    sharedPreferences.getString(pictureSizePrefKey, "352x288")!!
                 )
             )
         } catch (e: Exception) {
@@ -77,7 +78,7 @@ object PreferenceUtils {
             if (lensfacing == CameraSelector.LENS_FACING_BACK) context.getString(R.string.pref_key_camerax_rear_camera_target_resolution) else context.getString(
                 R.string.pref_key_camerax_front_camera_target_resolution
             )
-        val sharedPreferences = Preference(context).sharedPreferences
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
         return try {
             Size.parseSize(sharedPreferences.getString(prefKey, null))
         } catch (e: Exception) {
@@ -86,9 +87,9 @@ object PreferenceUtils {
     }
 
     fun shouldHideDetectionInfo(context: Context): Boolean {
-        val sharedPreferences = Preference(context).sharedPreferences
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
         val prefKey = context.getString(R.string.pref_key_info_hide)
-        return sharedPreferences.getBoolean(prefKey, false)
+        return sharedPreferences?.getBoolean(prefKey, false) ?: false
     }
 
     fun getObjectDetectorOptionsForStillImage(context: Context): ObjectDetectorOptions {
@@ -115,7 +116,7 @@ object PreferenceUtils {
         @StringRes prefKeyForClassification: Int,
         @DetectorMode mode: Int
     ): ObjectDetectorOptions {
-        val sharedPreferences = Preference(context).sharedPreferences
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
         val enableMultipleObjects =
             sharedPreferences.getBoolean(context.getString(prefKeyForMultipleObjects), false)
         val enableClassification =
@@ -144,8 +145,8 @@ object PreferenceUtils {
 //    }
 
     fun isCameraLiveViewportEnabled(context: Context): Boolean {
-        val sharedPreferences = Preference(context).sharedPreferences
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
         val prefKey = context.getString(R.string.pref_key_camera_live_viewport)
-        return sharedPreferences.getBoolean(prefKey, false)
+        return sharedPreferences?.getBoolean(prefKey, false) ?: false
     }
 }
