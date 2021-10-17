@@ -1,5 +1,6 @@
 package nl.pinxoft.orderpiqr
 
+import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -16,8 +17,6 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private var cameraSource: CameraSource? = null
-    private var preview: CameraSourcePreview? = null
-    private var graphicOverlay: GraphicOverlay? = null
 
     private val TAG = "LivePreviewActivity"
     private val PERMISSION_REQUESTS = 1
@@ -27,15 +26,6 @@ class MainActivity : AppCompatActivity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        preview = findViewById(R.id.preview_view)
-        if (preview == null) {
-            Log.d(TAG, "Preview is null")
-        }
-        graphicOverlay = findViewById(R.id.graphic_overlay)
-        if (graphicOverlay == null) {
-            Log.d(TAG, "graphicOverlay is null")
-        }
 
         if (allPermissionsGranted()) {
             createCameraSource()
@@ -48,7 +38,7 @@ class MainActivity : AppCompatActivity() {
     private fun createCameraSource() {
         // If there's no existing cameraSource, create one.
         if (cameraSource == null) {
-            cameraSource = CameraSource(this, graphicOverlay!!)
+            cameraSource = CameraSource(this)
         }
         try {
             cameraSource!!.setMachineLearningFrameProcessor(BarcodeScannerProcessor(this))
@@ -71,13 +61,22 @@ class MainActivity : AppCompatActivity() {
     private fun startCameraSource() {
         if (cameraSource != null) {
             try {
-                if (preview == null) {
-                    Log.d(TAG, "resume: Preview is null")
+                // Inserted by Jetbrains:
+                if (ActivityCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.CAMERA
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return
                 }
-                if (graphicOverlay == null) {
-                    Log.d(TAG, "resume: graphOverlay is null")
-                }
-                preview!!.start(cameraSource!!, graphicOverlay)
+                cameraSource!!.start()
             } catch (e: IOException) {
                 Log.e(TAG, "Unable to start camera source.", e)
                 cameraSource!!.release()

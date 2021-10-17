@@ -29,14 +29,14 @@ interface VisionImageProcessor {
     /**
      * Processes a bitmap image.
      */
-    fun processBitmap(bitmap: Bitmap?, graphicOverlay: GraphicOverlay)
+    fun processBitmap(bitmap: Bitmap?)
 
     /**
      * Processes ByteBuffer image data, e.g. used for Camera1 live preview case.
      */
     @Throws(MlKitException::class)
     fun processByteBuffer(
-        data: ByteBuffer?, frameMetadata: FrameMetadata?, graphicOverlay: GraphicOverlay
+        data: ByteBuffer?, frameMetadata: FrameMetadata?
     )
 
     /**
@@ -44,7 +44,7 @@ interface VisionImageProcessor {
      */
     @RequiresApi(VERSION_CODES.KITKAT)
     @Throws(MlKitException::class)
-    fun processImageProxy(image: ImageProxy, graphicOverlay: GraphicOverlay)
+    fun processImageProxy(image: ImageProxy)
 
     /**
      * Stops the underlying machine learning model and release resources.

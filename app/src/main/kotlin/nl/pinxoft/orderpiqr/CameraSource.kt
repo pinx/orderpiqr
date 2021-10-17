@@ -38,7 +38,7 @@ import java.util.*
  * displaying extra information). This receives preview frames from the camera at a specified rate,
  * sending those frames to child classes' detectors / classifiers as fast as it is able to process.
  */
-class CameraSource(protected var activity: Activity, private val graphicOverlay: GraphicOverlay) {
+class CameraSource(protected var activity: Activity) {
     private var camera: Camera? = null
 
     /**
@@ -92,7 +92,6 @@ class CameraSource(protected var activity: Activity, private val graphicOverlay:
     fun release() {
         synchronized(processorLock) {
             stop()
-            cleanScreen()
             if (frameProcessor != null) {
                 frameProcessor!!.stop()
             }
@@ -115,29 +114,6 @@ class CameraSource(protected var activity: Activity, private val graphicOverlay:
         camera = createCamera()
         dummySurfaceTexture = SurfaceTexture(DUMMY_TEXTURE_NAME)
         camera!!.setPreviewTexture(dummySurfaceTexture)
-        camera!!.startPreview()
-        processingThread = Thread(processingRunnable)
-        processingRunnable.setActive(true)
-        processingThread!!.start()
-        return this
-    }
-
-    /**
-     * Opens the camera and starts sending preview frames to the underlying detector. The supplied
-     * surface holder is used for the preview so frames can be displayed to the user.
-     *
-     * @param surfaceHolder the surface holder to use for the preview frames
-     * @throws IOException if the supplied surface holder could not be used as the preview display
-     */
-    @RequiresPermission(Manifest.permission.CAMERA)
-    @Synchronized
-    @Throws(IOException::class)
-    fun start(surfaceHolder: SurfaceHolder?): CameraSource {
-        if (camera != null) {
-            return this
-        }
-        camera = createCamera()
-        camera!!.setPreviewDisplay(surfaceHolder)
         camera!!.startPreview()
         processingThread = Thread(processingRunnable)
         processingRunnable.setActive(true)
@@ -365,7 +341,6 @@ class CameraSource(protected var activity: Activity, private val graphicOverlay:
 
     fun setMachineLearningFrameProcessor(processor: VisionImageProcessor?) {
         synchronized(processorLock) {
-            cleanScreen()
             if (frameProcessor != null) {
                 frameProcessor!!.stop()
             }
@@ -482,8 +457,7 @@ class CameraSource(protected var activity: Activity, private val graphicOverlay:
                                 .setWidth(previewSize!!.width)
                                 .setHeight(previewSize!!.height)
                                 .setRotation(rotationDegrees)
-                                .build(),
-                            graphicOverlay
+                                .build()
                         )
                     }
                 } catch (t: Exception) {
@@ -493,13 +467,6 @@ class CameraSource(protected var activity: Activity, private val graphicOverlay:
                 }
             }
         }
-    }
-
-    /**
-     * Cleans up graphicOverlay and child classes can do their cleanups as well .
-     */
-    private fun cleanScreen() {
-        graphicOverlay.clear()
     }
 
     companion object {
@@ -662,7 +629,6 @@ class CameraSource(protected var activity: Activity, private val graphicOverlay:
     }
 
     init {
-        graphicOverlay.clear()
         processingRunnable = FrameProcessingRunnable()
     }
 }

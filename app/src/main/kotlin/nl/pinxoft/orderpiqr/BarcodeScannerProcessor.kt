@@ -25,14 +25,8 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 
-/** Barcode Detector Demo.  */
 class BarcodeScannerProcessor(context: Context) : VisionProcessorBase<List<Barcode>>(context) {
 
-    // Note that if you know which format of barcode your app is dealing with, detection will be
-    // faster to specify the supported barcode formats one by one, e.g.
-    // BarcodeScannerOptions.Builder()
-    //     .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
-    //     .build();
     val options = BarcodeScannerOptions.Builder()
         .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
         .build()
@@ -47,15 +41,16 @@ class BarcodeScannerProcessor(context: Context) : VisionProcessorBase<List<Barco
         return barcodeScanner.process(image)
     }
 
-    override fun onSuccess(results: List<Barcode>, graphicOverlay: GraphicOverlay) {
+    override fun onSuccess(results: List<Barcode>) {
         if (results.isEmpty()) {
             Log.v(MANUAL_TESTING_LOG, "No barcode has been detected")
         }
         for (i in results.indices) {
             val barcode = results[i]
-            graphicOverlay.add(BarcodeGraphic(graphicOverlay, barcode))
             logExtrasForTesting(barcode)
         }
+        if (results.isNotEmpty())
+            this.stop()
     }
 
     override fun onFailure(e: Exception) {
