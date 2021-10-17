@@ -30,11 +30,12 @@ import java.io.IOException
 class CameraSourcePreview(context: Context, attrs: AttributeSet?) : ViewGroup(
     context, attrs
 ) {
-    private val surfaceView: SurfaceView
+    private val surfaceView: SurfaceView = SurfaceView(context)
     private var startRequested = false
     private var surfaceAvailable = false
     private var cameraSource: CameraSource? = null
     private var overlay: GraphicOverlay? = null
+
     @Throws(IOException::class)
     private fun start(cameraSource: CameraSource) {
         this.cameraSource = cameraSource
@@ -132,7 +133,7 @@ class CameraSourcePreview(context: Context, attrs: AttributeSet?) : ViewGroup(
         if (previewAspectRatio > layoutAspectRatio) {
             // The preview input is wider than the layout area. Fit the layout height and crop
             // the preview input horizontally while keep the center.
-            val horizontalOffset = (previewAspectRatio * layoutHeight - layoutWidth) as Int / 2
+            val horizontalOffset = (previewAspectRatio * layoutHeight - layoutWidth).toInt() / 2
             surfaceView.layout(-horizontalOffset, 0, layoutWidth + horizontalOffset, layoutHeight)
         } else {
             // The preview input is taller than the layout area. Fit the layout width and crop the preview
@@ -143,7 +144,7 @@ class CameraSourcePreview(context: Context, attrs: AttributeSet?) : ViewGroup(
     }
 
     private val isPortraitMode: Boolean
-        private get() {
+        get() {
             val orientation = context.resources.configuration.orientation
             if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 return false
@@ -160,7 +161,6 @@ class CameraSourcePreview(context: Context, attrs: AttributeSet?) : ViewGroup(
     }
 
     init {
-        surfaceView = SurfaceView(context)
         surfaceView.holder.addCallback(SurfaceCallback())
         addView(surfaceView)
     }

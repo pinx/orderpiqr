@@ -22,8 +22,8 @@ import nl.pinxoft.orderpiqr.GraphicOverlay.Graphic
 /**
  * Draw camera image to background.
  */
-class CameraImageGraphic(overlay: GraphicOverlay?, private val bitmap: Bitmap) : Graphic(overlay) {
+class CameraImageGraphic(overlay: GraphicOverlay, private val bitmap: Bitmap) : Graphic(overlay) {
     override fun draw(canvas: Canvas) {
-        canvas.drawBitmap(bitmap, transformationMatrix, null)
+        canvas.drawBitmap(bitmap, getTransformationMatrix(), null)
     }
 }

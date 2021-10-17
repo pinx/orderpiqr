@@ -26,7 +26,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 /** Graphic instance for rendering Barcode position and content information in an overlay view. */
-class BarcodeGraphic constructor(overlay: GraphicOverlay?, private val barcode: Barcode?) :
+class BarcodeGraphic constructor(overlay: GraphicOverlay, private val barcode: Barcode?) :
     Graphic(overlay) {
     private val rectPaint: Paint = Paint()
     private val barcodePaint: Paint
