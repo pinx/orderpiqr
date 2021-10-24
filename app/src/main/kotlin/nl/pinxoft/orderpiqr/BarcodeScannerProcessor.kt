@@ -25,7 +25,8 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 
-class BarcodeScannerProcessor(context: Context) : VisionProcessorBase<List<Barcode>>(context) {
+class BarcodeScannerProcessor(private val context: Context) :
+    VisionProcessorBase<List<Barcode>>(context) {
 
     val options = BarcodeScannerOptions.Builder()
         .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
@@ -49,8 +50,9 @@ class BarcodeScannerProcessor(context: Context) : VisionProcessorBase<List<Barco
             val barcode = results[i]
             logExtrasForTesting(barcode)
         }
-        if (results.isNotEmpty())
+        if (results.isNotEmpty()) {
             this.stop()
+        }
     }
 
     override fun onFailure(e: Exception) {
@@ -94,66 +96,8 @@ class BarcodeScannerProcessor(context: Context) : VisionProcessorBase<List<Barco
                     MANUAL_TESTING_LOG,
                     "barcode raw value: " + barcode.rawValue
                 )
-                val dl = barcode.driverLicense
-                if (dl != null) {
-                    Log.v(
-                        MANUAL_TESTING_LOG,
-                        "driver license city: " + dl.addressCity
-                    )
-                    Log.v(
-                        MANUAL_TESTING_LOG,
-                        "driver license state: " + dl.addressState
-                    )
-                    Log.v(
-                        MANUAL_TESTING_LOG,
-                        "driver license street: " + dl.addressStreet
-                    )
-                    Log.v(
-                        MANUAL_TESTING_LOG,
-                        "driver license zip code: " + dl.addressZip
-                    )
-                    Log.v(
-                        MANUAL_TESTING_LOG,
-                        "driver license birthday: " + dl.birthDate
-                    )
-                    Log.v(
-                        MANUAL_TESTING_LOG,
-                        "driver license document type: " + dl.documentType
-                    )
-                    Log.v(
-                        MANUAL_TESTING_LOG,
-                        "driver license expiry date: " + dl.expiryDate
-                    )
-                    Log.v(
-                        MANUAL_TESTING_LOG,
-                        "driver license first name: " + dl.firstName
-                    )
-                    Log.v(
-                        MANUAL_TESTING_LOG,
-                        "driver license middle name: " + dl.middleName
-                    )
-                    Log.v(
-                        MANUAL_TESTING_LOG,
-                        "driver license last name: " + dl.lastName
-                    )
-                    Log.v(
-                        MANUAL_TESTING_LOG,
-                        "driver license gender: " + dl.gender
-                    )
-                    Log.v(
-                        MANUAL_TESTING_LOG,
-                        "driver license issue date: " + dl.issueDate
-                    )
-                    Log.v(
-                        MANUAL_TESTING_LOG,
-                        "driver license issue country: " + dl.issuingCountry
-                    )
-                    Log.v(
-                        MANUAL_TESTING_LOG,
-                        "driver license number: " + dl.licenseNumber
-                    )
-                }
             }
         }
     }
 }
+

@@ -22,15 +22,11 @@ import android.graphics.Bitmap
 import android.os.Build.VERSION_CODES
 import android.os.SystemClock
 import android.util.Log
-import android.widget.Toast
 import androidx.annotation.GuardedBy
 import androidx.annotation.RequiresApi
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageProxy
 import com.google.android.gms.tasks.*
-import com.google.android.odml.image.BitmapMlImageBuilder
-import com.google.android.odml.image.ByteBufferMlImageBuilder
-import com.google.android.odml.image.MediaMlImageBuilder
 import com.google.android.odml.image.MlImage
 import com.google.mlkit.common.MlKitException
 import com.google.mlkit.vision.common.InputImage
@@ -57,6 +53,7 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
         context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
     private val fpsTimer = Timer()
     private val executor = ScopedExecutor(TaskExecutors.MAIN_THREAD)
+    private val scanningIntervalMs = 1000L;
 
     // Whether this processor is already shut down
     private var isShutdown = false
@@ -70,9 +67,9 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
     private var maxDetectorMs = 0L
     private var minDetectorMs = Long.MAX_VALUE
 
-    // Frame count that have been processed so far in an one second interval to calculate FPS.
-    private var frameProcessedInOneSecondInterval = 0
-    private var framesPerSecond = 0
+    // Frame count that have been processed so far in an interval to calculate FPS.
+    private var frameProcessedInInterval = 0
+    private var framesPerInterval = 0
 
     // To keep the latest images and its metadata.
     @GuardedBy("this")
@@ -92,12 +89,12 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
         fpsTimer.scheduleAtFixedRate(
             object : TimerTask() {
                 override fun run() {
-                    framesPerSecond = frameProcessedInOneSecondInterval
-                    frameProcessedInOneSecondInterval = 0
+                    framesPerInterval = frameProcessedInInterval
+                    frameProcessedInInterval = 0
                 }
             },
             0,
-            1000
+            this.scanningIntervalMs
         )
     }
 
@@ -107,12 +104,11 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
 
         requestDetectInImage(
             InputImage.fromBitmap(bitmap!!, 0),
-            /* originalCameraImage= */ null,
             frameStartMs
         )
     }
 
-    // -----------------Code for processing live preview frame from Camera1 API-----------------------
+    // -----------------Code for processing frame from Camera1 API-----------------------
     @Synchronized
     override fun processByteBuffer(
         data: ByteBuffer?,
@@ -141,7 +137,6 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
         frameMetadata: FrameMetadata,
     ) {
         val frameStartMs = SystemClock.elapsedRealtime()
-        val bitmap = BitmapUtils.getBitmap(data, frameMetadata)
 
         requestDetectInImage(
             InputImage.fromByteBuffer(
@@ -151,7 +146,6 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
                 frameMetadata.rotation,
                 InputImage.IMAGE_FORMAT_NV21
             ),
-            bitmap,
             frameStartMs
         )
             .addOnSuccessListener(executor) { processLatestImage() }
@@ -165,11 +159,9 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
         if (isShutdown) {
             return
         }
-        var bitmap: Bitmap? = null
 
         requestDetectInImage(
             InputImage.fromMediaImage(image.image!!, image.imageInfo.rotationDegrees),
-            /* originalCameraImage= */ bitmap,
             frameStartMs
         )
             // When the image is from CameraX analysis use case, must call image.close() on received
@@ -181,32 +173,27 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
     // -----------------Common processing logic-------------------------------------------------------
     private fun requestDetectInImage(
         image: InputImage,
-        originalCameraImage: Bitmap?,
         frameStartMs: Long
     ): Task<T> {
         return setUpListener(
             detectInImage(image),
-            originalCameraImage,
             frameStartMs
         )
     }
 
     private fun requestDetectInImage(
         image: MlImage,
-        originalCameraImage: Bitmap?,
         shouldShowFps: Boolean,
         frameStartMs: Long
     ): Task<T> {
         return setUpListener(
             detectInImage(image),
-            originalCameraImage,
             frameStartMs
         )
     }
 
     private fun setUpListener(
         task: Task<T>,
-        originalCameraImage: Bitmap?,
         frameStartMs: Long
     ): Task<T> {
         val detectorStartMs = SystemClock.elapsedRealtime()
@@ -221,7 +208,7 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
                         resetLatencyStats()
                     }
                     numRuns++
-                    frameProcessedInOneSecondInterval++
+                    frameProcessedInInterval++
                     totalFrameMs += currentFrameLatencyMs
                     maxFrameMs = max(currentFrameLatencyMs, maxFrameMs)
                     minFrameMs = min(currentFrameLatencyMs, minFrameMs)
@@ -229,9 +216,9 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
                     maxDetectorMs = max(currentDetectorLatencyMs, maxDetectorMs)
                     minDetectorMs = min(currentDetectorLatencyMs, minDetectorMs)
 
-                    // Only log inference info once per second. When frameProcessedInOneSecondInterval is
-                    // equal to 1, it means this is the first frame processed during the current second.
-                    if (frameProcessedInOneSecondInterval == 1) {
+                    // Only log inference info once per second. When frameProcessedInInterval is
+                    // equal to 1, it means this is the first frame processed during the current interval.
+                    if (frameProcessedInInterval == 1) {
                         Log.d(TAG, "Num of Runs: $numRuns")
                         Log.d(
                             TAG,
