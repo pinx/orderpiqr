@@ -13,12 +13,12 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import nl.pinxoft.orderpiqr.databinding.ActivityMainBinding
 import java.io.IOException
-import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private var cameraSource: CameraSource? = null
+    private lateinit var barcodeScannerProcessor: BarcodeScannerProcessor
 
     private val TAG = "LivePreviewActivity"
     private val PERMISSION_REQUESTS = 1
@@ -26,11 +26,13 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        barcodeScannerProcessor = BarcodeScannerProcessor(this)
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         findViewById<Button>(R.id.scanButton).setOnClickListener {
-            findViewById<TextView>(R.id.scanResult).text = ""
+            scanResult = ""
             startCameraSource()
         }
 
@@ -41,8 +43,24 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun handleScanResult(text: String){
-        findViewById<TextView>(R.id.scanResult).text = text
+    override fun onPause() {
+        super.onPause()
+        with(this.getPreferences(Context.MODE_PRIVATE).edit()) {
+            clear()
+            putString("scanResult", scanResult)
+            commit()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        with(this.getPreferences(Context.MODE_PRIVATE)) {
+            scanResult = getString("scanResult", "") ?: ""
+        }
+    }
+
+    fun handleScanResult(text: String) {
+        scanResult = text
         cameraSource?.stop()
     }
 
@@ -52,7 +70,7 @@ class MainActivity : AppCompatActivity() {
             cameraSource = CameraSource(this)
         }
         try {
-            cameraSource!!.setMachineLearningFrameProcessor(BarcodeScannerProcessor(this))
+            cameraSource!!.setMachineLearningFrameProcessor(barcodeScannerProcessor)
         } catch (e: RuntimeException) {
             Log.e(TAG, "Can not create barcode image processor", e)
             Toast.makeText(
@@ -147,4 +165,9 @@ class MainActivity : AppCompatActivity() {
         return false
     }
 
+    private var scanResult: String
+        get() = findViewById<TextView>(R.id.scanResult).text.toString()
+        set(value) {
+            findViewById<TextView>(R.id.scanResult).text = value
+        }
 }

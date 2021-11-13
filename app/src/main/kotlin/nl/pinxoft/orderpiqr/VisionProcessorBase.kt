@@ -53,7 +53,7 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
         context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
     private val fpsTimer = Timer()
     private val executor = ScopedExecutor(TaskExecutors.MAIN_THREAD)
-    private val scanningIntervalMs = 1000L;
+    private val scanningIntervalMs = 250L;
 
     // Whether this processor is already shut down
     private var isShutdown = false

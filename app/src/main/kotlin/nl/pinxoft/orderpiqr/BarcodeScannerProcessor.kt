@@ -44,12 +44,13 @@ class BarcodeScannerProcessor(private val context: Context) :
 
     override fun onSuccess(results: List<Barcode>) {
         if (results.isEmpty()) {
+            return
             Log.v(MANUAL_TESTING_LOG, "No barcode has been detected")
         }
         for (i in results.indices) {
             val barcode = results[i]
-            (context as MainActivity).handleScanResult(barcode.rawValue)
-            logExtrasForTesting(barcode)
+            (context as MainActivity).handleScanResult(barcode.rawValue ?: "")
+            //logExtrasForTesting(barcode)
         }
     }
 
