@@ -48,10 +48,8 @@ class BarcodeScannerProcessor(private val context: Context) :
         }
         for (i in results.indices) {
             val barcode = results[i]
+            (context as MainActivity).handleScanResult(barcode.rawValue)
             logExtrasForTesting(barcode)
-        }
-        if (results.isNotEmpty()) {
-            this.stop()
         }
     }
 
