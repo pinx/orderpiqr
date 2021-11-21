@@ -3,9 +3,11 @@ package nl.pinxoft.orderpiqr
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -20,8 +22,9 @@ class MainActivity : AppCompatActivity() {
     private var cameraSource: CameraSource? = null
     private lateinit var barcodeScannerProcessor: BarcodeScannerProcessor
 
-    private val TAG = "LivePreviewActivity"
-    private val PERMISSION_REQUESTS = 1
+    private val tag = "PiQR"
+
+    private var pickList: PickList? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,7 +35,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         findViewById<Button>(R.id.scanButton).setOnClickListener {
-            scanResult = ""
+            instruction = ""
             startCameraSource()
         }
 
@@ -47,7 +50,9 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
         with(this.getPreferences(Context.MODE_PRIVATE).edit()) {
             clear()
-            putString("scanResult", scanResult)
+            putString("scanResult", instruction)
+            putString("pickList", pickList?.PickListString)
+            putInt("lastPickedIndex", pickList?.LastPickedIndex ?: -1)
             commit()
         }
     }
@@ -55,13 +60,42 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         with(this.getPreferences(Context.MODE_PRIVATE)) {
-            scanResult = getString("scanResult", "") ?: ""
+            instruction = getString("scanResult", "") ?: ""
+            val pickListString = getString("pickList", "") ?: ""
+            if (pickListString.isNotEmpty())
+                setPickList(pickListString)
+            pickList?.LastPickedIndex = getInt("lastPickedIndex", -1)
         }
     }
 
     fun handleScanResult(text: String) {
-        scanResult = text
-        cameraSource?.stop()
+        instruction = text
+        if (instruction.length > 12)
+            setPickList(text)
+        else
+            pickItem(text)
+        if (!continuousScanning)
+            cameraSource?.stop()
+    }
+
+    private fun setPickList(text: String) {
+        pickList = PickList(text)
+        showState(ScanState.NewPickList)
+    }
+
+    private fun pickItem(text: String) {
+        if (pickList == null) {
+            instruction = "Eerst een pickbon scannen!"
+            return
+        }
+        val scanSuccessful = pickList!!.Pick(instruction)
+        instruction = pickList!!.ItemToScan().joinToString ("\n")
+        if (scanSuccessful) {
+            pickList!!.LastPickedIndex += 1
+            instruction = pickList!!.ItemToScan().joinToString("\n")
+            showState(ScanState.Success)
+        } else
+            showState(ScanState.Failure)
     }
 
     private fun createCameraSource() {
@@ -72,7 +106,7 @@ class MainActivity : AppCompatActivity() {
         try {
             cameraSource!!.setMachineLearningFrameProcessor(barcodeScannerProcessor)
         } catch (e: RuntimeException) {
-            Log.e(TAG, "Can not create barcode image processor", e)
+            Log.e(tag, "Can not create barcode image processor", e)
             Toast.makeText(
                 applicationContext,
                 "Can not create image processor: " + e.message,
@@ -107,7 +141,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 cameraSource!!.start()
             } catch (e: IOException) {
-                Log.e(TAG, "Unable to start camera source.", e)
+                Log.e(tag, "Unable to start camera source.", e)
                 cameraSource!!.release()
                 cameraSource = null
             }
@@ -149,7 +183,7 @@ class MainActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(
                 this,
                 allNeededPermissions.toTypedArray(),
-                PERMISSION_REQUESTS
+                1
             )
         }
     }
@@ -158,16 +192,30 @@ class MainActivity : AppCompatActivity() {
         if (ContextCompat.checkSelfPermission(context, permission)
             == PackageManager.PERMISSION_GRANTED
         ) {
-            Log.i(TAG, "Permission granted: $permission")
+            Log.i(tag, "Permission granted: $permission")
             return true
         }
-        Log.i(TAG, "Permission NOT granted: $permission")
+        Log.i(tag, "Permission NOT granted: $permission")
         return false
     }
 
-    private var scanResult: String
+    private var instruction: String
         get() = findViewById<TextView>(R.id.scanResult).text.toString()
         set(value) {
             findViewById<TextView>(R.id.scanResult).text = value
         }
+
+    private val continuousScanning: Boolean
+        get() = findViewById<Switch>(R.id.continuousScan).isChecked
+
+    private fun showState(state: ScanState) {
+        when (state) {
+            ScanState.Success ->
+                window.decorView.setBackgroundColor(Color.GREEN)
+            ScanState.Failure ->
+                window.decorView.setBackgroundColor(Color.RED)
+            else ->
+                window.decorView.setBackgroundColor(Color.WHITE)
+        }
+    }
 }

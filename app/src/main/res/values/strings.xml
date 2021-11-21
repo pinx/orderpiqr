@@ -32,5 +32,7 @@
     <string name="pref_title_object_detector_enable_classification" translatable="false">Enable classification</string>
     <string name="pref_key_live_preview_object_detector_enable_classification" translatable="false">lpodec</string>
     <string name="pref_key_still_image_object_detector_enable_classification" translatable="false">siodec</string>
+    <string name="scan">Scan</string>
+    <string name="textview">TextView</string>
 
 </resources>

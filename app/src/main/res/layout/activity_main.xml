@@ -15,10 +15,10 @@
 
     <Button
         android:id="@+id/scanButton"
-        android:layout_width="351dp"
+        android:layout_width="350sp"
         android:layout_height="215dp"
         android:layout_marginBottom="20dp"
-        android:text="Scan"
+        android:text="@string/scan"
         android:textSize="40sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -27,14 +27,26 @@
 
     <TextView
         android:id="@+id/scanResult"
-        android:layout_width="359dp"
-        android:layout_height="192dp"
+        android:layout_width="350sp"
+        android:layout_height="219dp"
         android:layout_marginBottom="35dp"
-        android:text="TextView"
+        android:text="@string/textview"
         android:textSize="40sp"
         app:layout_constraintBottom_toTopOf="@+id/scanButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <Switch
+        android:id="@+id/continuousScan"
+        android:layout_width="64dp"
+        android:layout_height="55dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="16dp"
+        android:textOn="Cont"
+        android:textOff="-"
+        android:textSize="10sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
