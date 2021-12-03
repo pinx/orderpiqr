@@ -238,10 +238,12 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
                                     ", avg=" +
                                     totalDetectorMs / numRuns
                         )
+/*
                         val mi = ActivityManager.MemoryInfo()
                         activityManager.getMemoryInfo(mi)
                         val availableMegs: Long = mi.availMem / 0x100000L
                         Log.d(TAG, "Memory available in system: $availableMegs MB")
+*/
                     }
                     this@VisionProcessorBase.onSuccess(results)
                 }

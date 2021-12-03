@@ -39,6 +39,8 @@ import java.util.*
  * sending those frames to child classes' detectors / classifiers as fast as it is able to process.
  */
 class CameraSource(protected var activity: Activity) {
+    var Active = false
+
     private var camera: Camera? = null
 
     /**
@@ -108,6 +110,7 @@ class CameraSource(protected var activity: Activity) {
     @Synchronized
     @Throws(IOException::class)
     fun start(): CameraSource {
+        Active = true
         if (camera != null) {
             return this
         }
@@ -133,6 +136,7 @@ class CameraSource(protected var activity: Activity) {
      */
     @Synchronized
     fun stop() {
+        Active = false
         processingRunnable.setActive(false)
         if (processingThread != null) {
             try {

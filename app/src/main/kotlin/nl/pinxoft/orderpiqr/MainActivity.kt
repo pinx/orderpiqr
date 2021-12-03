@@ -3,13 +3,11 @@ package nl.pinxoft.orderpiqr
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
-import android.widget.Button
-import android.widget.Switch
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -37,6 +35,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.scanButton).setOnClickListener {
             instruction = ""
             startCameraSource()
+            showCameraState()
         }
 
         if (allPermissionsGranted()) {
@@ -69,6 +68,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun handleScanResult(text: String) {
+        Log.v(TAG, "Scanned ${text.substring(0, Math.min(10, text.length - 1))}")
         instruction = text
         if (instruction.length > 12)
             setPickList(text)
@@ -76,25 +76,30 @@ class MainActivity : AppCompatActivity() {
             pickItem(text)
         if (!continuousScanning)
             cameraSource?.stop()
+        showCameraState()
     }
 
     private fun setPickList(text: String) {
+        Log.v(TAG, "Set pick list")
         pickList = PickList(text)
         showState(ScanState.NewPickList)
     }
 
     private fun pickItem(text: String) {
+        Log.v(TAG, "Picked item $text")
         if (pickList == null) {
             instruction = "Eerst een pickbon scannen!"
             return
         }
         val scanSuccessful = pickList!!.Pick(instruction)
-        instruction = pickList!!.ItemToScan().joinToString ("\n")
+        instruction = pickList!!.ItemToScan().joinToString("\n")
         if (scanSuccessful) {
+            Log.v(TAG, "Success, go to next item")
             pickList!!.LastPickedIndex += 1
             instruction = pickList!!.ItemToScan().joinToString("\n")
             showState(ScanState.Success)
         } else
+            Log.v(TAG, "Wrong item picked")
             showState(ScanState.Failure)
     }
 
@@ -211,11 +216,26 @@ class MainActivity : AppCompatActivity() {
     private fun showState(state: ScanState) {
         when (state) {
             ScanState.Success ->
-                window.decorView.setBackgroundColor(Color.GREEN)
+                window.decorView.setBackgroundColor(Color.rgb(176, 191, 26))
             ScanState.Failure ->
                 window.decorView.setBackgroundColor(Color.RED)
             else ->
                 window.decorView.setBackgroundColor(Color.WHITE)
         }
+        findViewById<ProgressBar>(R.id.progressBar).progress = pickList?.progress ?: 0
+    }
+
+    private fun showCameraState() {
+        Log.v(TAG, "Show camera state")
+        val color = if (cameraSource?.Active ?: false)
+            Color.GREEN
+        else
+            Color.BLUE
+        findViewById<ProgressBar>(R.id.progressBar).progressTintList =
+            ColorStateList.valueOf(color)
+    }
+
+    companion object {
+        const val TAG = "Pick"
     }
 }

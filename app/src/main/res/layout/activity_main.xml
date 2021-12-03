@@ -5,13 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:keepScreenOn="true">
-    <!--    tools:context=".MainActivity">-->
-
-    <include
-        android:id="@+id/settings_button"
-        layout="@layout/settings_style"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
 
     <Button
         android:id="@+id/scanButton"
@@ -43,10 +36,23 @@
         android:layout_height="55dp"
         android:layout_marginTop="12dp"
         android:layout_marginEnd="16dp"
-        android:textOn="Cont"
         android:textOff="-"
+        android:textOn="Cont"
         android:textSize="10sp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/progressBar" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:max="100"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="409dp"
+        android:layout_height="15sp"
+        android:layout_marginStart="1dp"
+        android:padding="2dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

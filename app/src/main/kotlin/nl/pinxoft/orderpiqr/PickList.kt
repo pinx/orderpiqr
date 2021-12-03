@@ -20,6 +20,15 @@ class PickList(public val PickListString: String) {
         PickItems = pickItems
     }
 
+    /*
+    Progress in percentage: 0 - 100
+    */
+    val progress: Int
+        get() = (LastPickedIndex + 1) * 100 / length
+
+    val length: Int
+        get() = PickItems.size
+
     fun ItemToScan(): List<String> {
         val indexToScan = LastPickedIndex + 1
         if (indexToScan > PickItems.lastIndex)
